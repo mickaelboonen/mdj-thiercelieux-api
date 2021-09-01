@@ -7,7 +7,7 @@ var mysql = require('mysql');
 var { dbData } = require('../database/db');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
+router.get('/', (req, res, next) => {
   const db = mysql.createConnection(dbData);
   db.connect();
   db.query('SELECT * FROM users', (error, results, fields) => {
@@ -19,5 +19,20 @@ router.get('/', function(req, res, next) {
   });
   db.end();
 });
+
+router.post('/', (req, res, next) => {
+  const db = mysql.createConnection(dbData);
+  db.connect();
+  const { body: {username, email, password, avatar} } = req;
+  const sqlRequest = `INSERT INTO \`users\` (\`name\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${password}', '${avatar}')`;
+
+  db.query(sqlRequest, function (error, results, fields) {
+    if (error) throw error;
+    console.log('results', results);
+    res.send(results);
+  });
+  db.end();
+});
+
 
 module.exports = router;
