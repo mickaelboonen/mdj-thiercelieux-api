@@ -4,13 +4,17 @@ var mysql = require('mysql');
 // const { dump } = require('dumper.js');
 
 // Destructuring
-var { db } = require('../database/db');
+var { dbData } = require('../database/db');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
+  const db = mysql.createConnection(dbData);
   db.connect();
   db.query('SELECT * FROM users', (error, results, fields) => {
-    if (error) throw error;
+    if (error) {
+      console.error(error);
+    }
+    // throw error;
     res.send(results);
   });
   db.end();
