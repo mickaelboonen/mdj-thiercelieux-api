@@ -32,18 +32,38 @@ router.post('/create', (req, res, next) => {
   bcrypt.hash(password, saltRounds, function(err, hash) {
  
     const hashedPassword = hash;
-    const sqlRequest = `INSERT INTO \`users\` (\`name\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hashedPassword}', '${avatar}')`;
+    const sqlUpdateRequest = `INSERT INTO \`users\` (\`name\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hashedPassword}', '${avatar}')`;
 
     // TODO 
     // email et pseudos uniques
 
-    db.query(sqlRequest, function (error, results, fields) {
+    db.query(`SELECT * FROM users WHERE name = '${username}'`, function (error, results, fields) {
       if (error) throw error;
-      console.log('results', results);
-      res.send(results);
+      if (results.length === 0) {
+        db.query(`SELECT * FROM \`users\` WHERE \`email\` = '${email}'`, (error, results, fields) => {
+          if (error) throw error;
+          console.log(email, results);
+          if (results.length === 0) {
+            db.query(sqlUpdateRequest, (error, results, fields) => {
+              const message = 'Inscription réussie !';
+              res.send(message);
+              db.end();
+            })
+          }
+          else {
+            const message = 'Cet email est déjà pris, veuillez en choisir un autre.';
+            res.send(message);
+          }
+        })
+      }
+      else {
+        const message = 'Ce pseudo est déjà pris, veuillez en choisir un autre.';
+        res.send(message);
+      }
+      
     }); 
 
-    db.end();
+    
 
   });
 });
