@@ -37,28 +37,47 @@ function authenticateToken(req, res, next) {
 /* GET users listing. */
 router.post('/check_auth', (req, res, next) => {
   const db = mysql.createConnection(dbData);
-  db.connect();
   const { body: {username, password} } = req;
-  db.query(`SELECT * FROM users WHERE name = '${username}' OR email = '${username}'`, (error, results, fields) => {
-    if (error) throw error;
-    const token = generateAccessToken({ username: username });
 
-    bcrypt.compare(password, results[0].password, function(err, result) {
-      if (result) {
-        const data = {};
-        data.id = results[0].id;
-        data.token = token;
-        res.send(data);
-      }
-      else {
-        const message = 'Message d\'erreur pour la connexion.'
-        res.send(message);
-      }
-    });
-    
+  db.connect();
+  db.query(`SELECT * FROM users WHERE pseudo = '${username}' OR email = '${username}'`, (error, results, fields) => {
+    if (error) throw error;
+    // If an user is found
+    if (results.length > 0) {
+      // We generate a token
+      const token = generateAccessToken({ username: username });
+      // We use bcrypt compare function to see if the current password, once hashed, matches the hashed password registered in the db
+      bcrypt.compare(password, results[0].password, function(err, result) {
+        // If there's a match, we send the id of the user, the token and the 200 status code.
+        if (result) {
+          const data = {};
+          data.id = results[0].id;
+          data.token = token;
+          data.status = 200;
+          res.send(data);
+        }
+        // If there isn't a match, we send an error message and the 403 status code.
+        else {
+          const data = {};
+          data.message = 'Vos identifiants et mots de passe ne correspondent pas. Veuillez réessayer.';
+          data.status = 403;
+          res.send(data);
+        }
+      });
+    }
+    // If we don't find a user matching the current username, we send an error message and the 403 status code.
+    else {
+      const data = {};
+      // The message is the same for both case for more security. We give as little information as possible about the error.
+      data.message = 'Vos identifiants et mots de passe ne correspondent pas. Veuillez réessayer.';
+      data.status = 403;
+      console.log(data);
+      res.send(data);
+    }
   });
   db.end();
 });
+
 /* GET users listing. */
 router.post('/login', authenticateToken, (req, res, next) => {
   const db = mysql.createConnection(dbData);
@@ -73,20 +92,6 @@ router.post('/login', authenticateToken, (req, res, next) => {
   });
   db.end();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 router.post('/create', (req, res, next) => {
   const db = mysql.createConnection(dbData);
