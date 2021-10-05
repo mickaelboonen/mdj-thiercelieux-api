@@ -84,14 +84,23 @@ router.post('/login', authenticateToken, (req, res, next) => {
   const db = mysql.createConnection(dbData);
   db.connect();
   const { body: {id} } = req;
-  db.query(`SELECT * FROM users WHERE id=${id}`, (error, results, fields) => {
+  db.query(`SELECT * FROM \`users\` WHERE \`id\` = ${id}`, (error, results, fields) => {
 
     // TODO : 
     // Inner Join and co 
     if (error) throw error;
-    res.send(results)
+    const user = results[0];
+
+    db.query(`SELECT * FROM \`stats\` WHERE \`user_id\` = ${id}`, (error, results, fields) => {
+      if (error) throw error;
+
+      if (results.length > 0) {
+        user.stats = results[0];
+        res.send(user)
+        db.end();
+      }
+    })
   });
-  db.end();
 });
 
 router.post('/create', (req, res, next) => {
@@ -101,53 +110,37 @@ router.post('/create', (req, res, next) => {
   const saltRounds = 10;
 
   bcrypt.hash(password, saltRounds, function(err, hash) {
-    const hashedPassword = hash;
-    const sqlCreateRequest = `INSERT INTO \`users\` (\`pseudo\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hashedPassword}', '${avatar}')`;
-    console.log(sqlCreateRequest);
-    db.query(`SELECT * FROM users WHERE pseudo = '${username}'`, function (error, results, fields) {
+    db.query(`SELECT \`pseudo\` FROM users WHERE pseudo = '${username}' OR \`email\` = '${email}'`, (error, results, fields) => {
+      let message = '';
       if (error) throw error;
+
       if (results.length === 0) {
-        db.query(`SELECT * FROM \`users\` WHERE \`email\` = '${email}'`, (error, results, fields) => {
+        db.query(`INSERT INTO \`users\` (\`pseudo\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hash}', '${avatar}')`, (error, results, fields) => {
           if (error) throw error;
-          
-          if (results.length === 0) {
-            db.query(sqlCreateRequest, (error, results, fields) => {
+
+          if (results.length > 0) {
+            const newId =  results.insertId;
+            db.query(`INSERT INTO \`stats\` (\`user_id\`) VALUES (${newId})`, (error, results, fields) => {
               if (error) throw error;
 
-              db.query(`SELECT \`id\` FROM \`users\` WHERE \`pseudo\` = '${username}'`, (error, results, fields) => {
-                if (error) throw error;
-
-                console.log(results.length, results, results[0].id);
-                if (results.length > 0) {
-                  db.query(`INSERT INTO \`stats\` (\`user_id\`) VALUES (${results[0].id})`, (error, results, fields) => {
-                      if (error) throw error;
-                      console.log(results);
-
-                      const message = 'Inscription réussie !';
-                      res.send(message);
-                      db.end();
-                  })
-                }
-
-              })
-
+              message = 'Inscription réussie !';
+              res.send(message);
+              db.end();
             })
-          }
-          else {
-            const message = 'Cet email est déjà pris, veuillez en choisir un autre.';
-            res.send(message);
           }
         })
       }
       else {
-        const message = 'Ce pseudo est déjà pris, veuillez en choisir un autre.';
+        const [user] = results
+        if (user.pseudo === username) {
+          message = 'Ce pseudo est déjà pris, veuillez en choisir un autre.';
+        } 
+        else {
+          message = 'Cet email est déjà pris, veuillez en choisir un autre.'
+        }
         res.send(message);
       }
-      
     }); 
-
-    
-
   });
 });
 
