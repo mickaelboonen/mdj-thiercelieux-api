@@ -117,8 +117,8 @@ router.post('/create', (req, res, next) => {
       if (results.length === 0) {
         db.query(`INSERT INTO \`users\` (\`pseudo\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hash}', '${avatar}')`, (error, results, fields) => {
           if (error) throw error;
-
-          if (results.length > 0) {
+          
+          if (results.affectedRows === 1) {
             const newId =  results.insertId;
             db.query(`INSERT INTO \`stats\` (\`user_id\`) VALUES (${newId})`, (error, results, fields) => {
               if (error) throw error;
