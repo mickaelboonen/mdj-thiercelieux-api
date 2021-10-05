@@ -4,6 +4,7 @@ var auth = require('express-jwt-token');
 const bcrypt = require('bcrypt');
 var mysql = require('mysql');
 const jwt = require('jsonwebtoken');
+// import { insertInto } from '../requests/insert';
 // const { dump } = require('dumper.js');
 
 // Destructuring
@@ -101,20 +102,35 @@ router.post('/create', (req, res, next) => {
 
   bcrypt.hash(password, saltRounds, function(err, hash) {
     const hashedPassword = hash;
-    const sqlUpdateRequest = `INSERT INTO \`users\` (\`name\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hashedPassword}', '${avatar}')`;
-
-    db.query(`SELECT * FROM users WHERE name = '${username}'`, function (error, results, fields) {
+    const sqlCreateRequest = `INSERT INTO \`users\` (\`pseudo\`, \`email\`, \`password\`, \`avatar\`) VALUES ('${username}', '${email}', '${hashedPassword}', '${avatar}')`;
+    console.log(sqlCreateRequest);
+    db.query(`SELECT * FROM users WHERE pseudo = '${username}'`, function (error, results, fields) {
       if (error) throw error;
       if (results.length === 0) {
         db.query(`SELECT * FROM \`users\` WHERE \`email\` = '${email}'`, (error, results, fields) => {
           if (error) throw error;
-          console.log(email, results);
+          
           if (results.length === 0) {
-            db.query(sqlUpdateRequest, (error, results, fields) => {
+            db.query(sqlCreateRequest, (error, results, fields) => {
               if (error) throw error;
-              const message = 'Inscription réussie !';
-              res.send(message);
-              db.end();
+
+              db.query(`SELECT \`id\` FROM \`users\` WHERE \`pseudo\` = '${username}'`, (error, results, fields) => {
+                if (error) throw error;
+
+                console.log(results.length, results, results[0].id);
+                if (results.length > 0) {
+                  db.query(`INSERT INTO \`stats\` (\`user_id\`) VALUES (${results[0].id})`, (error, results, fields) => {
+                      if (error) throw error;
+                      console.log(results);
+
+                      const message = 'Inscription réussie !';
+                      res.send(message);
+                      db.end();
+                  })
+                }
+
+              })
+
             })
           }
           else {
