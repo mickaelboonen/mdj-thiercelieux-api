@@ -122,9 +122,7 @@ router.post('/create', (req, res, next) => {
             const newId =  results.insertId;
             db.query(`INSERT INTO \`stats\` (\`user_id\`) VALUES (${newId})`, (error, results, fields) => {
               if (error) throw error;
-
-              message = 'Inscription réussie !';
-              res.send(message);
+              res.sendStatus(201);
               db.end();
             })
           }
