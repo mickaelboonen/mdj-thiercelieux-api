@@ -4,6 +4,22 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+
+
+
+// -----------------------------------------------------------------------------------------------------
+const jwt = require('jsonwebtoken');
+const jwtToken = require('crypto').randomBytes(64).toString('hex');
+
+const dotenv = require('dotenv');
+
+// get config vars
+dotenv.config();
+
+// access config var
+process.env.TOKEN_SECRET;
+
+// -----------------------------------------------------------------------------------------------------
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var cardsRouter = require('./routes/cards');
