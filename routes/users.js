@@ -8,7 +8,12 @@ const jwt = require('jsonwebtoken');
 // const { dump } = require('dumper.js');
 
 // Destructuring
-var { dbData } = require('../database/db');
+var dbData = {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DB,
+};
 
 // router.all('/login', auth.jwtAuthProtected);
 
