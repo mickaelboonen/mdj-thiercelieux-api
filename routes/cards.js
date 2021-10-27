@@ -15,7 +15,7 @@ var dbData = {
 router.get('/roles', function(req, res, next) {
   const db = mysql.createConnection(dbData);
   db.connect();
-  db.query('SELECT * FROM roles', (error, results, fields) => {
+  db.query('SELECT `roles`.*, `games`.`name` AS `game` FROM `roles` INNER JOIN `games` ON `games`.`id` = `roles`.`game_id`', (error, results, fields) => {
     if (error) {
       console.error(error);
     }
