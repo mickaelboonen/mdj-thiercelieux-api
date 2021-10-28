@@ -15,30 +15,29 @@ var dbData = {
   database: process.env.DB_DB,
 };
 
-// router.all('/login', auth.jwtAuthProtected);
-
 /* GET users listing. */
 router.get('/:id', (req, res, next) => {
   const db = mysql.createConnection(dbData);
   db.connect();
   db.query(`SELECT * FROM \`stats\` WHERE \`user_id\` = ${req.params.id}`, (error, results, fields) => {
     if (error) throw error;
-    // console.log(results);
     let [stat] = results;
-    console.log(stat);
-
     res.send(stat);
-
-    // const sql = 'UPDATE `stats` SET ? WHERE `user_id` = ' + currentState.userId;
-
-    // db.query(sql, patch, (error, results, fields) => {
-    //     if (error) throw error;
-    //     console.log(results);
-    //     res.send(results);
-    //     db.end();
-    //   });
     });
-    db.end();
+  db.end();
+});
+
+router.patch('/:id', (req, res, next) => {
+  const db = mysql.createConnection(dbData);
+  db.connect();
+  const { body: { currentStat } } = req;
+  delete currentStat.userId;
+  const sql = 'UPDATE `stats` SET ? WHERE `user_id` = ' + currentStat.user_id;
+  db.query(sql, currentStat, (error, results, fields) => {
+    if (error) throw error;
+    res.send(results);
+  });
+  db.end();
 });
 
 
