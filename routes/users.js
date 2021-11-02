@@ -22,7 +22,6 @@ function generateAccessToken(username) {
 }
 
 function authenticateToken(req, res, next) {
-  console.log(123456);
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
 
@@ -83,6 +82,17 @@ router.post('/check_auth', (req, res, next) => {
   });
   db.end();
 });
+// TODO : route to be protected !
+router.get('/list', (req, res, next) => {
+  const db = mysql.createConnection(dbData);
+  db.connect();
+  db.query(`SELECT \`users\`.\`pseudo\`, \`users\`.\`id\` FROM \`users\``, (error, results, fields) => {
+    if (error) throw error;
+    res.send(results)
+  });
+  db.end();
+
+})
 
 /* GET users listing. */
 router.post('/login', authenticateToken, (req, res, next) => {
