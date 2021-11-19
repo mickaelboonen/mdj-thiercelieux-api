@@ -43,7 +43,7 @@ function authenticateToken(req, res, next) {
 router.post('/check_auth', (req, res, next) => {
   const db = mysql.createConnection(dbData);
   const { body: {username, password} } = req;
-
+  console.log(username, password,)
   db.connect();
   db.query(`SELECT * FROM users WHERE pseudo = '${username}' OR email = '${username}'`, (error, results, fields) => {
     if (error) throw error;
